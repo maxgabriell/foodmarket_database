@@ -30,23 +30,45 @@ INSERT INTO `payments` (`PAYMENT_ID`, `CART_ID`, `PAYMENT_TYPE`, `CARD_NUMBER`, 
 ('PaymentTest1', 'CartTest1', 'CREDIT', '23412', '2022-01-01', '123', TRUE);
 
 INSERT INTO `orders` (`ORDER_ID`, `PAYMENT_ID`, `CART_ID`, `TOTAL_AMOUNT_SPEND`, `DATE_ORDER`) VALUES
-('OrderTest1', 'PaymentTest1', 'CartTest1', 0, '2022-01-01')
+('OrderTest1', 'PaymentTest1', 'CartTest1', 0, '2022-01-01');
+
+SELECT * FROM orders;
+
+DELIMITER $$
+CREATE FUNCTION `make_sum_total_amount`(`cart_id_value` VARCHAR(64))
+RETURNS FLOAT
+DETERMINISTIC
+BEGIN
+    DECLARE total_sum FLOAT;
+    SELECT SUM(quantity*item_price)
+    FROM cart_items 
+    LEFT JOIN catalog_items ON cart_items.item_id = catalog_items.item_id
+    LEFT JOIN orders ON cart_items.cart_id = orders.cart_id
+    WHERE cart_items.cart_id = BINARY cart_id_value
+    GROUP BY cart_id_value
+    INTO total_sum;
+    RETURN COALESCE(total_sum, 0);
+END; $$
+DELIMITER ;
 
 DELIMITER $$
 CREATE TRIGGER UPDATE_TOTAL_AMOUNT
 AFTER UPDATE
 ON CART_ITEMS
 FOR EACH ROW
-BEGIN
-	UPDATE `ORDERS`
-	SET TOTAL_AMOUNT_SPEND = (
-		SELECT SUM(quantity*item_price)
-		FROM cart_items
-		LEFT JOIN catalog_items ON cart_items.item_id = catalog_items.item_id
-		LEFT JOIN carts ON cart_items.cart_item_id = carts.cart_item_id
-		WHERE CART_ITEMS.CART_ITEM_ID = NEW.CART_ITEM_ID);
-END $$
+	UPDATE ORDERS
+    SET total_amount_spend = make_sum_total_amount(new.cart_id)
+    WHERE cart_id = new.cart_id;
+END; $$
 DELIMITER ;
+
+select * from orders;
+
+UPDATE cart_items
+SET quantity = 2
+WHERE cart_id = 'CartTest1' AND item_id = 'ItemTest1';
+
+select * from orders;
 
 -- 2) a trigger that inserts a row in a “log” table if the ACCOUNT table is modified
 -- with insert, update or delete columns

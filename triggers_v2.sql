@@ -18,8 +18,8 @@ INSERT INTO `sessions` (`SESSION_ID`, `ACCOUNT_ID`, `STARTED_AT`, `CLOSED_AT`) V
 INSERT INTO `locations` (`LOCATION_ID`, `SESSION_ID`, `STREET_NAME`, `STREET_NUMBER`, `COMPLEMENT`, `POSTAL_CODE`, `CITY`, `STATE`, `COUNTRY`) VALUES
 ('LocationTest1', 'SessionTest1', 'Rua Teste', '42', 'Apto 23', '90221-22', 'Sao Paulo', 'SP', 'BR');
 
-INSERT INTO `carts` (`CART_ID`, `SESSION_ID`, `CLOSED_CART`, `HAS_ORDER`) VALUES
-('CartTest1','SessionTest1', False, False);
+INSERT INTO `carts` (`CART_ID`, `SESSION_ID`, `TOTAL_AMOUNT_SPEND`, `CLOSED_CART`, `HAS_ORDER`) VALUES
+('CartTest1','SessionTest1', 0, False, False);
 
 INSERT INTO `cart_items` (`CART_ID`, `ITEM_ID`, `QUANTITY`) VALUES
 ('CartTest1','ItemTest1',2),
@@ -29,8 +29,8 @@ INSERT INTO `cart_items` (`CART_ID`, `ITEM_ID`, `QUANTITY`) VALUES
 INSERT INTO `payments` (`PAYMENT_ID`, `CART_ID`, `PAYMENT_TYPE`, `CARD_NUMBER`, `EXPIRATION_DATE`, `CVC`, `APPROVED_PAYMENT`) VALUES
 ('PaymentTest1', 'CartTest1', 'CREDIT', '23412', '2022-01-01', '123', TRUE);
 
-INSERT INTO `orders` (`ORDER_ID`, `PAYMENT_ID`, `CART_ID`, `TOTAL_AMOUNT_SPEND`, `DATE_ORDER`) VALUES
-('OrderTest1', 'PaymentTest1', 'CartTest1', 0, '2022-01-01');
+INSERT INTO `orders` (`ORDER_ID`, `PAYMENT_ID`, `CART_ID`, `DATE_ORDER`) VALUES
+('OrderTest1', 'PaymentTest1', 'CartTest1', '2022-01-01');
 
 SELECT * FROM orders;
 
@@ -44,7 +44,7 @@ BEGIN
     FROM cart_items 
     LEFT JOIN catalog_items ON cart_items.item_id = catalog_items.item_id
     LEFT JOIN orders ON cart_items.cart_id = orders.cart_id
-    WHERE cart_items.cart_id = BINARY cart_id_value
+    WHERE cart_items.cart_id = cart_id_value
     GROUP BY cart_id_value
     INTO total_sum;
     RETURN COALESCE(total_sum, 0);
@@ -56,19 +56,19 @@ CREATE TRIGGER UPDATE_TOTAL_AMOUNT
 AFTER UPDATE
 ON CART_ITEMS
 FOR EACH ROW
-	UPDATE ORDERS
+	UPDATE CARTS
     SET total_amount_spend = make_sum_total_amount(new.cart_id)
     WHERE cart_id = new.cart_id;
 END; $$
 DELIMITER ;
 
-select * from orders;
+select * from carts;
 
 UPDATE cart_items
-SET quantity = 2
+SET quantity = 3
 WHERE cart_id = 'CartTest1' AND item_id = 'ItemTest1';
 
-select * from orders;
+select * from carts;
 
 -- 2) a trigger that inserts a row in a “log” table if the ACCOUNT table is modified
 -- with insert, update or delete columns

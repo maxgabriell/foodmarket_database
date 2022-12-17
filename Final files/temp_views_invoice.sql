@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW INVOCE_1 AS 
+CREATE OR REPLACE VIEW INVOICE_1 AS 
 WITH order_level as (
 	SELECT
 		m.merchant_id,
@@ -6,7 +6,6 @@ WITH order_level as (
         o.order_id,
         o.date_order,
         rat.rating,
-        SUM(cti.quantity * cat.item_price) AS price,
         AVG(car.total_amount_spend) AS order_value #COULD ALSO BE MAX,MIN SINCE THE VALUE IS DUPLICATED
 	FROM 
 	merchants m
@@ -29,7 +28,6 @@ SELECT
     DATE_FORMAT(date_order,"%M-%Y") month,
     COUNT(order_id) AS total_orders,
     SUM(order_value) AS GMV,
-    SUM(price),
     AVG(rating) AS avg_rating
 FROM
 	order_level
@@ -38,26 +36,7 @@ WHERE
 GROUP BY
 	1,2,3
 ;
-select * from INVOCE_1;
-
-SELECT
-	o.order_id,
-    c.cart_id,
-    cti.item_id,
-    cti.quantity,
-    cat.item_price,
-    cat.item_price * cti.quantity AS preco_total_item,
-    c.total_amount_spend
-FROM
-	orders o
-JOIN
-	carts c ON o.cart_id = c.cart_id
-JOIN
-	cart_items cti ON o.cart_id = cti.cart_id
-JOIN
-	catalog_items cat ON cti.item_id= cat.item_id
-WHERE
-	o.order_id= 'f441e428-f73f-4ff9-bfcd-73dec68b372f';
+select * from INVOICE_1;
 
 CREATE OR REPLACE VIEW INVOCE_2 AS 
 SELECT

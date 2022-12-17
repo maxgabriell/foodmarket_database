@@ -38,7 +38,7 @@ GROUP BY
 ;
 select * from INVOICE_1;
 
-CREATE OR REPLACE VIEW INVOCE_2 AS 
+CREATE OR REPLACE VIEW INVOICE_2 AS 
 SELECT
 	m.merchant_id,
 	m.merchant_name,
@@ -61,4 +61,5 @@ WHERE
 GROUP BY
 	1,2,3,4
 ;
-select * from INVOCE_2
+select * from INVOICE_2;
+select item_id from INVOICE_2;

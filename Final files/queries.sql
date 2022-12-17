@@ -5,6 +5,7 @@ a.first_name,
 a.last_name,
 o.date_order,
 o.order_id,
+cti.item_id,
 ci.item_name
 from accounts a
 left join sessions s 
@@ -18,6 +19,8 @@ on c.cart_id = cti.cart_id
 left join catalog_items ci
 on cti.item_id = ci.item_id
 where o.date_order between '2022-01-01' and '2022-06-01';
+
+
 
 
 
